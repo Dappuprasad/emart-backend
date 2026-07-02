@@ -1,0 +1,137 @@
+// Prisma schema — this file defines your database tables ("models").
+// After editing, run:  npx prisma migrate dev   to apply changes to the database.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// PRODUCTS
+// ---------------------------------------------------------------------------
+
+model Product {
+  id                   Int      @id @default(autoincrement())
+  title                String
+  description          String
+  category             String
+  price                Float
+  discountPercentage   Float    @default(0)
+  rating               Float    @default(0)
+  stock                Int      @default(0)
+  tags                 String[] // Postgres supports arrays natively
+  brand                String?
+  sku                  String   @default("")
+  weight               Float    @default(0)
+  dimensions           Json? // { width, height, depth }
+  warrantyInformation  String   @default("")
+  shippingInformation  String   @default("")
+  availabilityStatus   String   @default("")
+  returnPolicy         String   @default("")
+  minimumOrderQuantity Int      @default(1)
+  meta                 Json? // { barcode, qrCode, ... }
+  images               String[]
+  thumbnail            String   @default("")
+
+  reviews    Review[]
+  cartItems  CartItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Review {
+  id            Int      @id @default(autoincrement())
+  rating        Int
+  comment       String
+  date          DateTime @default(now())
+  reviewerName  String
+  reviewerEmail String
+
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId Int
+}
+
+// ---------------------------------------------------------------------------
+// USERS & ADDRESSES
+// ---------------------------------------------------------------------------
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String // stored HASHED, never plain text
+  createdAt DateTime @default(now())
+
+  addresses Address[]
+  orders    Order[]
+  cartItems CartItem[]
+}
+
+model Address {
+  id        String  @id @default(uuid())
+  name      String
+  street    String
+  city      String
+  state     String
+  zipCode   String
+  country   String
+  phone     String?
+  isDefault Boolean @default(false)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+}
+
+// ---------------------------------------------------------------------------
+// CART (server-side, one row per product per user)
+// ---------------------------------------------------------------------------
+
+model CartItem {
+  id        String @id @default(uuid())
+  quantity  Int    @default(1)
+
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId Int
+
+  // A user can only have one cart row per product.
+  @@unique([userId, productId])
+}
+
+// ---------------------------------------------------------------------------
+// ORDERS
+// ---------------------------------------------------------------------------
+
+model Order {
+  id                String      @id @default(uuid())
+  total             Float
+  status            String      @default("pending") // pending | processing | shipped | delivered | cancelled
+  shippingAddress   Json // snapshot of the address at time of order
+  orderDate         DateTime    @default(now())
+  estimatedDelivery DateTime?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  items OrderItem[]
+}
+
+// A snapshot of each purchased product (so order history stays correct
+// even if the product later changes price or is deleted).
+model OrderItem {
+  id        String @id @default(uuid())
+  productId Int
+  title     String
+  price     Float
+  quantity  Int
+  thumbnail String @default("")
+
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId String
+}
