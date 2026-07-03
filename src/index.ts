@@ -7,6 +7,7 @@ import cors from "cors";
 import productsRouter from "./routes/products";
 import authRouter from "./routes/auth";
 import cartRouter from "./routes/cart";
+import ordersRouter from "./routes/orders";
 
 // Create the Express application
 const app = express();
@@ -40,6 +41,9 @@ app.use("/api/auth", authRouter);
 
 // All cart routes live under /api/cart (protected — login required)
 app.use("/api/cart", cartRouter);
+
+// All order routes live under /api/orders (protected — login required)
+app.use("/api/orders", ordersRouter);
 
 // --- Error handler (must be last) ---
 // Any error thrown in a route ends up here, so the server replies with
