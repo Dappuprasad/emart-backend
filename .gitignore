@@ -9,3 +9,6 @@ dist/
 
 # Logs
 *.log
+
+# Personal learning notes (not part of the codebase)
+.context/
