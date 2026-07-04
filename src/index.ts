@@ -15,10 +15,16 @@ const app = express();
 // --- Middleware ---
 // Middleware are functions that run on every request before it reaches our routes.
 
-// Allow our frontend (a different origin) to call this backend.
+// Allow our frontend(s) to call this backend. FRONTEND_URL can be a single
+// URL or a comma-separated list (e.g. localhost + the live Vercel site).
+const allowedOrigins = (process.env.FRONTEND_URL ?? "http://localhost:3000")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL ?? "http://localhost:3000",
+    origin: allowedOrigins,
   })
 );
 
