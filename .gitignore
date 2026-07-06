@@ -12,3 +12,11 @@ dist/
 
 # Personal learning notes (not part of the codebase)
 .context/
+
+# AI assistant / editor tooling
+.claude/
+CLAUDE.md
+.cursor/
+.cursorrules
+.aider*
+.github/copilot-instructions.md
